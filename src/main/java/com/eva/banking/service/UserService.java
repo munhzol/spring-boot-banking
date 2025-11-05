@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.eva.banking.model.UserEntity;
 import com.eva.banking.repository.UserRepository;
+import com.eva.banking.util.AuthUtils;
 
 @Service
 public class UserService {
@@ -24,5 +25,26 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(rawPassword)); // 🔐
         user.setRole(role);
         return repo.save(user);
+    }
+
+    public UserEntity login(String username, String rawPassword) {
+        UserEntity user = repo.findByUsername(username).orElse(null);
+        if (user != null && passwordEncoder.matches(rawPassword, user.getPassword())) {
+            return user;
+        }
+        return null;
+    }
+
+    public UserEntity getCurrentUser() {
+        String username = AuthUtils.getUsername();
+        if (username == null) {
+            throw new RuntimeException("No logged-in user");
+        }
+
+        UserEntity user = repo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword("********");
+
+        return user;
     }
 }
