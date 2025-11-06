@@ -19,7 +19,6 @@ public class UserService {
     }
 
     public UserEntity register(String username, String rawPassword, String role) {
-        System.out.println(">>> /register called with: " + username);
         UserEntity user = new UserEntity();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(rawPassword)); // 🔐

@@ -69,26 +69,28 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
 
-        // 1. Username/Password-тэй token үүсгэнэ
+
+
+        // 1. Create a token with Username/Password
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 request.getUsername(),
                 request.getPassword());
 
-        // 2. AuthenticationManager ашиглаж authenticate хийнэ
+        // 2. Authenticate using AuthenticationManager
         Authentication authentication = authenticationManager.authenticate(authToken);
 
-        // 3. SecurityContext үүсгээд Authentication-ээ хадгална
+        // 3. Create a SecurityContext and store the Authentication
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        // 4. Session үүсгээд SecurityContext-ээ session дотор хадгална
+        // 4. Create a session and store the SecurityContext in it
         HttpSession session = httpRequest.getSession(true);
         session.setAttribute(
                 HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                 context);
 
-        // 5. Клиент рүү энгийн JSON буцаая (username + roles)
+        // 5. Return a simple JSON response to the client (username + roles)
         Map<String, Object> response = new HashMap<>();
         response.put("username", authentication.getName());
         response.put("roles", authentication.getAuthorities());
@@ -99,16 +101,16 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
-        // 1️⃣ Clear the security context
+        // 1. Clear the security context
         SecurityContextHolder.clearContext();
 
-        // 2️⃣ Invalidate the session
+        // 2. Invalidate the session
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
         }
 
-        // 3️⃣ Return JSON response
+        // 3. Return JSON response
         Map<String, String> res = new HashMap<>();
         res.put("message", "Logout successful");
         return ResponseEntity.ok(res);
