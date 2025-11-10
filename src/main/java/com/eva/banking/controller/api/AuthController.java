@@ -3,6 +3,7 @@ package com.eva.banking.controller.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,60 +17,75 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eva.banking.dto.ApiResponse;
 import com.eva.banking.dto.LoginRequest;
+import com.eva.banking.dto.RegisterRequest;
+import com.eva.banking.exception.DuplicationException;
 import com.eva.banking.model.UserEntity;
-import com.eva.banking.service.UserService;
+import com.eva.banking.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-
-// @Controller
-// public class AuthController {
-
-//     private final UserService userService;
-
-//     public AuthController(UserService userService) {
-//         this.userService = userService;
-//     }
-
-//     @GetMapping("/register")
-//     public String registerForm() {
-//         return "register"; // templates/register.html
-//     }
-
-//     @PostMapping("/register")
-//     public String register(@RequestParam String username,
-//             @RequestParam String password) {
-//         userService.register(username, password, "USER");
-//         return "redirect:/login?registered";
-//     }
-// }
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserService userService;
+    // private final UserService userService;
     private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
 
-    public AuthController(UserService userService, AuthenticationManager authenticationManager) {
-        this.userService = userService;
+    public AuthController(AuthService authService, AuthenticationManager authenticationManager) {
+        this.authService = authService;
         this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        String username = body.get("username");
-        String password = body.get("password");
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
-        userService.register(username, password, "USER");
-        return ResponseEntity.ok("User registered successfully!");
+        try {
+            UserEntity user = authService.register(request);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("role", user.getRole());
+            response.put("password", "********"); // Hide password
+
+            return ResponseEntity.ok(
+                    new ApiResponse("SUCCESS", "User registered successfully", response));
+
+        } catch (IllegalArgumentException | DuplicationException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("ERROR", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse("ERROR", "Unknown error occurred"));
+        }
+
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        // 1. Clear the security context
+        SecurityContextHolder.clearContext();
+
+        // 2. Invalidate the session
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return ResponseEntity.ok(
+                new ApiResponse("SUCCESS", "User logged out successfully"));
+
+    }
+
+    // add try catch
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-
-
 
         // 1. Create a token with Username/Password
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -96,29 +112,14 @@ public class AuthController {
         response.put("roles", authentication.getAuthorities());
         response.put("message", "Login successful");
 
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        // 1. Clear the security context
-        SecurityContextHolder.clearContext();
-
-        // 2. Invalidate the session
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-
-        // 3. Return JSON response
-        Map<String, String> res = new HashMap<>();
-        res.put("message", "Logout successful");
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(
+                new ApiResponse("SUCCESS", "Login successful", response));
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
-        UserEntity user = userService.getCurrentUser();
+        UserEntity user = authService.getCurrentUser();
         return ResponseEntity.ok(user);
+
     }
 }

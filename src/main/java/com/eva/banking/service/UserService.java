@@ -3,6 +3,7 @@ package com.eva.banking.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.eva.banking.exception.AccessDeniedException;
 import com.eva.banking.model.UserEntity;
 import com.eva.banking.repository.UserRepository;
 import com.eva.banking.util.AuthUtils;
@@ -35,14 +36,17 @@ public class UserService {
     }
 
     public UserEntity getCurrentUser() {
+
+        System.out.println("-----------------> Getting current user");
+
         String username = AuthUtils.getUsername();
+
         if (username == null) {
-            throw new RuntimeException("No logged-in user");
+            throw new AccessDeniedException("No logged-in user");
         }
 
-        UserEntity user = repo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setPassword("********");
+        UserEntity user = repo.findByUsername(username)
+                .orElseThrow(() -> new AccessDeniedException("No logged-in use"));
 
         return user;
     }

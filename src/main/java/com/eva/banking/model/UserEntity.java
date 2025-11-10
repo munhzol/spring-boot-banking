@@ -1,10 +1,13 @@
 package com.eva.banking.model;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -22,6 +25,10 @@ public class UserEntity {
     private String password;
 
     private String role;
+
+    // Энэ дансаас илгээгдсэн бүх гүйлгээ
+    @OneToMany(mappedBy = "userId")
+    private List<AccountEntity> accounts = null;
 
     public UserEntity() {
     }
@@ -57,5 +64,13 @@ public class UserEntity {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public List<AccountEntity> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<AccountEntity> accounts) {
+        this.accounts = accounts;
     }
 }
