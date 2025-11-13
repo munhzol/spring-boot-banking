@@ -22,24 +22,32 @@ public class AuthService {
 
     public UserEntity register(RegisterRequest request) {
 
-        if (request.getUsername() == null || request.getUsername().isEmpty() ||
-                request.getPassword() == null || request.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Username and password cannot be null or empty");
+        if (request.getEmail() == null || request.getEmail().isEmpty() ||
+                request.getPassword() == null || request.getPassword().isEmpty() ||
+                request.getFirstName() == null || request.getFirstName().isEmpty() ||
+                request.getLastName() == null || request.getLastName().isEmpty()) {
+            throw new IllegalArgumentException("Email, password, first name, and last name cannot be null or empty");
         }
 
-        if (authRepository.findByUsername(request.getUsername()) != null) {
-            throw new DuplicationException("Can't register user with this username");
+        if (authRepository.findByEmail(request.getEmail()) != null) {
+            throw new DuplicationException("Can't register user with this email");
         }
 
         UserEntity user = new UserEntity();
-        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // 🔐
         user.setRole("USER");
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         return authRepository.save(user);
     }
 
     public UserEntity getCurrentUser() {
         String username = AuthUtils.getUsername();
-        return username != null ? authRepository.findByUsername(username) : null;
+        UserEntity user = username != null ? authRepository.findByEmail(username) : null;
+        if (user != null) {
+            user.setPassword("********"); // Hide password
+        }
+        return user;
     }
 }

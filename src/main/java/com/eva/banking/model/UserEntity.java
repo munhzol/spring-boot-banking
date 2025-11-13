@@ -18,19 +18,34 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String username;
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String role;
 
-    // Энэ дансаас илгээгдсэн бүх гүйлгээ
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
     @OneToMany(mappedBy = "userId")
     private List<AccountEntity> accounts = null;
 
     public UserEntity() {
+    }
+
+    public UserEntity(String email, String password, String role, String firstName, String lastName, List<AccountEntity> accounts) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.accounts = accounts;
     }
 
     // Getters and Setters
@@ -42,12 +57,12 @@ public class UserEntity {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -66,6 +81,22 @@ public class UserEntity {
         this.role = role;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public List<AccountEntity> getAccounts() {
         return accounts;
     }
@@ -73,4 +104,5 @@ public class UserEntity {
     public void setAccounts(List<AccountEntity> accounts) {
         this.accounts = accounts;
     }
+
 }

@@ -7,5 +7,5 @@ import com.eva.banking.model.UserEntity;
 
 @Repository
 public interface AuthRepository extends JpaRepository<UserEntity, Long> {
-    UserEntity findByUsername(String username);
+    UserEntity findByEmail(String email);
 }

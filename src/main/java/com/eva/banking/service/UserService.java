@@ -21,14 +21,14 @@ public class UserService {
 
     public UserEntity register(String username, String rawPassword, String role) {
         UserEntity user = new UserEntity();
-        user.setUsername(username);
+        user.setEmail(username);
         user.setPassword(passwordEncoder.encode(rawPassword)); // 🔐
         user.setRole(role);
         return repo.save(user);
     }
 
-    public UserEntity login(String username, String rawPassword) {
-        UserEntity user = repo.findByUsername(username).orElse(null);
+    public UserEntity login(String email, String rawPassword) {
+        UserEntity user = repo.findByEmail(email).orElse(null);
         if (user != null && passwordEncoder.matches(rawPassword, user.getPassword())) {
             return user;
         }
@@ -45,7 +45,7 @@ public class UserService {
             throw new AccessDeniedException("No logged-in user");
         }
 
-        UserEntity user = repo.findByUsername(username)
+        UserEntity user = repo.findByEmail(username)
                 .orElseThrow(() -> new AccessDeniedException("No logged-in use"));
 
         return user;
